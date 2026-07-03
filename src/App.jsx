@@ -64,7 +64,9 @@ const DPVisualizerPage = lazy(
 const DPOptimizationJourneyPage = lazy(
   () => import('./components/dynamicProgramming/DPOptimizationJourney') // Path to your main component
 )
-
+const GreedyVisualizerPage = lazy(
+  () => import('./components/greedyAlgo/GreedyVisualizer')
+)
 const SlidingWindowVisualizerPage = lazy(
   () => import('./components/slidingwindow/SlidingWindowVisualizer')
 )
@@ -233,6 +235,14 @@ const router = createBrowserRouter([
       </AppLayout>
     ),
   },
+  {
+  path: '/greedy',
+  element: (
+    <AppLayout notesKey="algo-notes-greedy">
+      <GreedyVisualizerPage />
+    </AppLayout>
+  ),
+},
   {
     path: '/dp-journey',
     element: (

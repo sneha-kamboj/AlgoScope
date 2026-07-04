@@ -1,4 +1,20 @@
+// Imports
+
+// Constants
+
+// Helper Functions
+
+// Input Panel
+
+// Activity Selection View
+
+// Controls
+
+// Main Component
+
 export default function GreedyVisualizer() {
+ 
+
   return (
 <div className="mb-10">
   <h1 className="text-4xl font-bold text-white mb-3">
@@ -29,23 +45,13 @@ export default function GreedyVisualizer() {
       Code Examples
     </span>
     {/* Algorithm Tabs */}
-<div className="flex flex-wrap gap-3 mb-8">
-  <button className="px-4 py-2 rounded-full bg-emerald-600 text-white font-medium">
-    Activity Selection
-  </button>
 
-  <button className="px-4 py-2 rounded-full border border-slate-600 text-slate-300">
-    Fractional Knapsack
-  </button>
+    {/* Main Grid */}
 
-  <button className="px-4 py-2 rounded-full border border-slate-600 text-slate-300">
-    Huffman Coding
-  </button>
+    {/* Left Panel */}
 
-  <button className="px-4 py-2 rounded-full border border-slate-600 text-slate-300">
-    Job Sequencing
-  </button>
-</div>
+    {/* Right Panel */}
+   
   </div>
 </div>
   );

@@ -75,6 +75,7 @@ const TwoPointerVisualizerPage = lazy(
 )
 const StackVisualizerPage = lazy(
   () => import('./components/monotonicStack/StackVisualizerPage')
+
 )
 const PracticePage = lazy(() => import('./components/PracticePage'))
 const AboutAlgoScope = lazy(() => import('./components/about/About'))

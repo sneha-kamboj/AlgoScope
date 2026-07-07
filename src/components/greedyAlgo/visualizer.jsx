@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { CODE_EXAMPLES } from "../../data/codeExample";
+import CodeViewer from "../CodeViewer";
 
 const ALGORITHMS = [
   "Activity Selection",
@@ -26,9 +28,15 @@ const ALGORITHM_DETAILS = {
   },
 }
 
-export default function GreedyVisualizer() {
+export default function Visualizer() {
 
   const [selectedAlgorithm, setSelectedAlgorithm] = useState(ALGORITHMS[0]);
+ 
+     const [selectedLanguage, setSelectedLanguage] = useState("javascript");
+     const languages = ["javascript", "python", "java", "cpp"];
+      const currentCode =
+  CODE_EXAMPLES[selectedAlgorithm]?.[selectedLanguage] || "";
+
 
   const [activities, setActivities] = useState([]);
   const [currentStep, setCurrentStep] = useState(
@@ -270,35 +278,7 @@ export default function GreedyVisualizer() {
               </button>
             </div>
           )}
-
-          {/* ================= Buttons ================= */}
-          <div className="flex gap-3 mt-6">
-
-            <button
-              onClick={handleRun}
-              className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 rounded-lg transition-all duration-200"
-            >
-              {running ? "▶ Re-run Algorithm" : "▶ Run Algorithm"}
-            </button>
-
-            <button
-              onClick={handleReset}
-              disabled={!running}
-              className="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              ↺ Reset
-            </button>
-
-          </div>
-
-        </div>
-
-        {/* ================= Right Panel ================= */}
-
-        <div className="lg:col-span-2">
-
-          <div className="bg-slate-900 rounded-xl border border-slate-700 p-6">
-
+          <div>
             {/* ==========================================================
                                   Visualization
             ========================================================== */}
@@ -355,62 +335,74 @@ export default function GreedyVisualizer() {
 
             </div>
 
-            <div className="mt-6 bg-slate-800 rounded-xl border border-slate-700 p-5">
+          </div>
 
-              <h3 className="text-lg font-semibold text-emerald-400 mb-4">
-                Current Step
-              </h3>
+          {/* ================= Buttons ================= */}
+          <div className="flex gap-3 mt-6">
 
-              <p className="text-slate-300 leading-7">
-                {selectedAlgorithm === "Activity Selection" && currentStep}
-                {selectedAlgorithm === "Fractional Knapsack" &&
-                  "Waiting... Click Run Algorithm to begin Fractional Knapsack visualization."}
+            <button
+              onClick={handleRun}
+              className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 rounded-lg transition-all duration-200"
+            >
+              {running ? "▶ Re-run Algorithm" : "▶ Run Algorithm"}
+            </button>
 
-                {selectedAlgorithm === "Huffman Coding" &&
-                  "Waiting... Click Run Algorithm to begin Huffman Tree construction."}
+            <button
+              onClick={handleReset}
+              disabled={!running}
+              className="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              ↺ Reset
+            </button>
 
-                {selectedAlgorithm === "Dijkstra's Algorithm" &&
-                  "Waiting... Click Run Algorithm to begin shortest path visualization."}
-              </p>
+          </div>
 
-            </div>
+        </div>
 
-            {/* ==========================================================
-                                      Legend
-            ========================================================== */}
+        {/* ================= Right Panel ================= */}
 
-            <div className="mt-6 bg-slate-800 rounded-xl border border-slate-700 p-5">
+        <div className="lg:col-span-2">
 
-              <h3 className="text-lg font-semibold text-cyan-400 mb-4">
-                Legend
-              </h3>
+          <div className="bg-slate-900 rounded-xl border border-slate-700 p-6">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-slate-700">
 
-              <div className="grid grid-cols-2 gap-4">
+    <h2 className="text-white font-bold">
+        Implementation
+    </h2>
+<div className="flex gap-2">
 
-                <div className="flex items-center gap-3">
-                  <div className="w-4 h-4 rounded-full bg-green-500"></div>
-                  <span className="text-slate-300">Selected / Visited</span>
-                </div>
+  {languages.map((lang) => (
+    <button
+      key={lang}
+      onClick={() => setSelectedLanguage(lang)}
+      className={`px-3 py-1 rounded text-sm ${
+        selectedLanguage === lang
+          ? "bg-cyan-500 text-white"
+          : "bg-slate-700 text-slate-300"
+      }`}
+    >
+      {lang}
+    </button>
+  ))}
 
-                <div className="flex items-center gap-3">
-                  <div className="w-4 h-4 rounded-full bg-blue-500"></div>
-                  <span className="text-slate-300">Current</span>
-                </div>
+  <button className="px-3 py-1 rounded bg-slate-700">
+    Copy
+  </button>
 
-                <div className="flex items-center gap-3">
-                  <div className="w-4 h-4 rounded-full bg-red-500"></div>
-                  <span className="text-slate-300">Rejected</span>
-                </div>
+</div>
 
-                <div className="flex items-center gap-3">
-                  <div className="w-4 h-4 rounded-full bg-gray-500"></div>
-                  <span className="text-slate-300">Pending</span>
-                </div>
-
-              </div>
-
-            </div>
-
+</div>
+<CodeViewer
+  language={selectedLanguage}
+  code={currentCode}
+  title={`${selectedAlgorithm} Implementation`}
+/>
+</div>
+ <div className="bg-slate-800 rounded-xl border border-slate-700 p-5 mt-6">
+  <h3 className="text-lg font-semibold text-amber-400 mb-4">
+    Code Examples
+  </h3>
+    
             {/* ==========================================================
                                   Complexity
             ========================================================== */}

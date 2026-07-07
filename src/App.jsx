@@ -65,7 +65,7 @@ const DPOptimizationJourneyPage = lazy(
   () => import('./components/dynamicProgramming/DPOptimizationJourney') // Path to your main component
 )
 const GreedyVisualizerPage = lazy(
-  () => import('./components/greedyAlgo/GreedyVisualizer')
+  () => import('./components/greedyAlgo/Visualizer')
 )
 const SlidingWindowVisualizerPage = lazy(
   () => import('./components/slidingwindow/SlidingWindowVisualizer')

@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { CODE_EXAMPLES } from "../../data/codeExample";
 import CodeViewer from "../CodeViewer";
+import GreedyVisualizer from "./GreedyVisualizer";
+
 
 const ALGORITHMS = [
   "Activity Selection",
@@ -31,18 +33,18 @@ const ALGORITHM_DETAILS = {
 export default function Visualizer() {
 
   const [selectedAlgorithm, setSelectedAlgorithm] = useState(ALGORITHMS[0]);
- 
+
      const [selectedLanguage, setSelectedLanguage] = useState("javascript");
      const languages = ["javascript", "python", "java", "cpp"];
       const currentCode =
   CODE_EXAMPLES[selectedAlgorithm]?.[selectedLanguage] || "";
 
 
-  const [activities, setActivities] = useState([]);
-  const [currentStep, setCurrentStep] = useState(
-    "Waiting... Click Run Algorithm."
-  );
-  const [currentIndex, setCurrentIndex] = useState(-1);
+  // const [activities, setActivities] = useState([]);
+  // const [currentStep, setCurrentStep] = useState(
+  //   "Waiting... Click Run Algorithm."
+  // );
+  // const [currentIndex, setCurrentIndex] = useState(-1);
   const [running, setRunning] = useState(false);
   const [startTimes, setStartTimes] = useState("");
   const [finishTimes, setFinishTimes] = useState("");
@@ -80,20 +82,20 @@ export default function Visualizer() {
       }
     });
 
-    setActivities(demo);
-    setCurrentIndex(0);
-    setCurrentStep("Activity A1 selected.");
-    setRunning(true);
-  };
+    // setActivities(demo);
+    // setCurrentIndex(0);
+    // setCurrentStep("Activity A1 selected.");
+  //   setRunning(true);
+  // };
 
-  const handleReset = () => {
-    setActivities([]);
-    setCurrentIndex(-1);
-    setCurrentStep("Waiting... Click Run Algorithm.");
-    setRunning(false);
-    setStartTimes("");
-    setFinishTimes("");
-  };
+  // const handleReset = () => {
+  //   setActivities([]);
+  //   setCurrentIndex(-1);
+  //   setCurrentStep("Waiting... Click Run Algorithm.");
+  //   setRunning(false);
+  //   setStartTimes("");
+  //   setFinishTimes("");
+  // };
 
   return (
     <>
@@ -283,19 +285,17 @@ export default function Visualizer() {
                                   Visualization
             ========================================================== */}
 
-            <h2 className="text-2xl font-bold text-white mb-6">
+            {/* <h2 className="text-2xl font-bold text-white mb-6">
               Visualization
-            </h2>
+            </h2> */}
 
-            <div className="h-[420px] rounded-xl bg-slate-800 border border-slate-700 p-6 overflow-auto">
-
+            {/* <div className="h-[420px] rounded-xl bg-slate-800 border border-slate-700 p-6 overflow-auto">
               {selectedAlgorithm === "Activity Selection" && (
                 <div>
                   <h3 className="text-xl font-semibold text-white mb-6">
                     Activities
                   </h3>
                   <div className="space-y-4">
-
                     {activities.map((activity, idx) => (
                       <div
                         key={activity.id}
@@ -305,11 +305,9 @@ export default function Visualizer() {
                             : ""
                         }`}
                       >
-
                         <span className="w-10 text-slate-300">
                           {activity.id}
                         </span>
-
                         <div
                           className={`flex-1 h-10 rounded flex items-center px-4 text-white
                             ${
@@ -335,10 +333,13 @@ export default function Visualizer() {
 
             </div>
 
-          </div>
+          
+ 
+ */}
 
-          {/* ================= Buttons ================= */}
-          <div className="flex gap-3 mt-6">
+             </div>
+         {/* ================= Buttons ================= */}
+          {/* <div className="flex gap-3 mt-6">
 
             <button
               onClick={handleRun}
@@ -355,7 +356,7 @@ export default function Visualizer() {
               ↺ Reset
             </button>
 
-          </div>
+          </div> */}
 
         </div>
 
@@ -396,6 +397,9 @@ export default function Visualizer() {
   language={selectedLanguage}
   code={currentCode}
   title={`${selectedAlgorithm} Implementation`}
+/>
+<GreedyVisualizer
+    selectedAlgorithm={selectedAlgorithm}
 />
 </div>
  <div className="bg-slate-800 rounded-xl border border-slate-700 p-5 mt-6">

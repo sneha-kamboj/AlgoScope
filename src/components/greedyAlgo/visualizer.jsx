@@ -3,106 +3,203 @@ import { CODE_EXAMPLES } from "../../data/codeExample";
 import CodeViewer from "../CodeViewer";
 import GreedyVisualizer from "./GreedyVisualizer";
 
-
 const ALGORITHMS = [
   "Activity Selection",
   "Fractional Knapsack",
   "Huffman Coding",
   "Dijkstra's Algorithm",
-]
-
-const ALGORITHM_DETAILS = {
-  "Activity Selection": {
-    short: "Pick the maximum number of non-overlapping activities by sorting by finish time.",
-    complexity: "O(n log n)",
-  },
-  "Fractional Knapsack": {
-    short: "Choose items by highest value/weight ratio to maximize profit in the knapsack.",
-    complexity: "O(n log n)",
-  },
-  "Huffman Coding": {
-    short: "Build an optimal prefix code by greedily merging the two smallest frequencies.",
-    complexity: "O(n log n)",
-  },
-  "Dijkstra's Algorithm": {
-    short: "Find the shortest path from a source by expanding the nearest unvisited node.",
-    complexity: "O((V+E) log V)",
-  },
-}
+];
 
 export default function Visualizer() {
-
   const [selectedAlgorithm, setSelectedAlgorithm] = useState(ALGORITHMS[0]);
+  const [selectedLanguage, setSelectedLanguage] = useState("javascript");
+  const languages = ["javascript", "python", "java", "cpp"];
+  const currentCode = CODE_EXAMPLES[selectedAlgorithm]?.[selectedLanguage] || "";
 
-     const [selectedLanguage, setSelectedLanguage] = useState("javascript");
-     const languages = ["javascript", "python", "java", "cpp"];
-      const currentCode =
-  CODE_EXAMPLES[selectedAlgorithm]?.[selectedLanguage] || "";
+  const [steps, setSteps] = useState([]);
+  const [currentStepIndex, setCurrentStepIndex] = useState(-1);
+  const [isPlaying, setIsPlaying] = useState(false);
 
-
-  // const [activities, setActivities] = useState([]);
-  // const [currentStep, setCurrentStep] = useState(
-  //   "Waiting... Click Run Algorithm."
-  // );
-  // const [currentIndex, setCurrentIndex] = useState(-1);
-  const [running, setRunning] = useState(false);
   const [startTimes, setStartTimes] = useState("");
   const [finishTimes, setFinishTimes] = useState("");
+  const [weights, setWeights] = useState("");
+  const [values, setValues] = useState("");
+  const [capacity, setCapacity] = useState("");
+  const [chars, setChars] = useState("");
+  const [freqs, setFreqs] = useState("");
+  const [edgesText, setEdgesText] = useState("");
+  const [sourceNode, setSourceNode] = useState("");
+
+  const handleReset = () => {
+    setSteps([]);
+    setCurrentStepIndex(-1);
+    setIsPlaying(false);
+  };
 
   const handleRun = () => {
-    if (selectedAlgorithm !== "Activity Selection") return;
+    handleReset();
+    let stepsArr = [];
 
-    const starts = startTimes
-      .split(",")
-      .map((item) => Number(item.trim()));
+    if (selectedAlgorithm === "Activity Selection") {
+      const starts = startTimes.split(",").map((s) => Number(s.trim()));
+      const finishes = finishTimes.split(",").map((s) => Number(s.trim()));
+      if (starts.length !== finishes.length) return alert("Start/Finish arrays must match length");
 
-    const finishes = finishTimes
-      .split(",")
-      .map((item) => Number(item.trim()));
+      const activities = starts
+        .map((start, i) => ({ id: `A${i + 1}`, start, finish: finishes[i] }))
+        .sort((a, b) => a.finish - b.finish);
 
-    if (starts.length !== finishes.length) {
-      alert("Start and Finish arrays must have same length");
-      return;
+      const snapshot = activities.map((a) => ({ ...a, status: "pending" }));
+      stepsArr.push({
+        snapshot: snapshot.map((a) => ({ ...a })),
+        activeIndex: -1,
+        message: "Sorted by finish time. Starting selection.",
+      });
+
+      let lastFinish = -Infinity;
+      activities.forEach((act, idx) => {
+        if (act.start >= lastFinish) {
+          snapshot[idx].status = "selected";
+          lastFinish = act.finish;
+          stepsArr.push({
+            snapshot: snapshot.map((a) => ({ ...a })),
+            activeIndex: idx,
+            message: `${act.id} SELECTED`,
+          });
+        } else {
+          snapshot[idx].status = "rejected";
+          stepsArr.push({
+            snapshot: snapshot.map((a) => ({ ...a })),
+            activeIndex: idx,
+            message: `${act.id} REJECTED (overlaps)`,
+          });
+        }
+      });
     }
 
-    const demo = starts.map((start, index) => ({
-      id: `A${index + 1}`,
-      start,
-      finish: finishes[index],
-      status: "pending",
-    }));
+    if (selectedAlgorithm === "Fractional Knapsack") {
+      const w = weights.split(",").map((x) => Number(x.trim()));
+      const v = values.split(",").map((x) => Number(x.trim()));
+      const cap = Number(capacity);
+      if (w.length !== v.length) return alert("Weights/Values arrays must match length");
 
-    demo.forEach((activity, index) => {
-      if (index === 0) {
-        activity.status = "selected";
-      } else if (activity.start >= demo[0].finish) {
-        activity.status = "selected";
-      } else {
-        activity.status = "rejected";
+      let remaining = cap;
+      let totalValue = 0;
+      const items = w
+        .map((weight, i) => ({ id: `I${i + 1}`, weight, value: v[i], ratio: v[i] / weight }))
+        .sort((a, b) => b.ratio - a.ratio);
+
+      stepsArr.push({
+        items,
+        remaining,
+        totalValue,
+        currentId: null,
+        message: `Sorted by ratio. Capacity = ${cap}`,
+      });
+
+      items.forEach((item) => {
+        if (remaining <= 0) {
+          stepsArr.push({
+            items,
+            remaining,
+            totalValue,
+            currentId: item.id,
+            fraction: 0,
+            message: `Full — skip ${item.id}`,
+          });
+          return;
+        }
+        const take = Math.min(item.weight, remaining);
+        const fraction = take / item.weight;
+        totalValue += fraction * item.value;
+        remaining -= take;
+        stepsArr.push({
+          items,
+          remaining,
+          totalValue,
+          currentId: item.id,
+          fraction,
+          message: `Took ${(fraction * 100).toFixed(0)}% of ${item.id}`,
+        });
+      });
+    }
+
+    if (selectedAlgorithm === "Huffman Coding") {
+      const c = chars.split(",").map((x) => x.trim());
+      const f = freqs.split(",").map((x) => Number(x.trim()));
+      if (c.length !== f.length) return alert("Characters/Frequencies must match length");
+
+      let nodes = c.map((ch, i) => ({ id: ch, freq: f[i] }));
+      stepsArr.push({ nodes: [...nodes], merged: null, message: "Initial frequencies loaded" });
+
+      while (nodes.length > 1) {
+        nodes.sort((a, b) => a.freq - b.freq);
+        const left = nodes.shift();
+        const right = nodes.shift();
+        const merged = { id: `(${left.id}${right.id})`, freq: left.freq + right.freq };
+        nodes.push(merged);
+        stepsArr.push({
+          nodes: [...nodes],
+          merged: { left, right, result: merged },
+          message: `Merged ${left.id} + ${right.id} → ${merged.freq}`,
+        });
       }
-    });
+    }
 
-    // setActivities(demo);
-    // setCurrentIndex(0);
-    // setCurrentStep("Activity A1 selected.");
-  //   setRunning(true);
-  // };
+    if (selectedAlgorithm === "Dijkstra's Algorithm") {
+      const edgeLines = edgesText
+        .trim()
+        .split("\n")
+        .filter(Boolean)
+        .map((l) => l.trim().split(/\s+/).map(Number));
+      const src = Number(sourceNode);
+      const nodeSet = new Set();
+      edgeLines.forEach(([u, v]) => {
+        nodeSet.add(u);
+        nodeSet.add(v);
+      });
+      const nodesArr = [...nodeSet];
 
-  // const handleReset = () => {
-  //   setActivities([]);
-  //   setCurrentIndex(-1);
-  //   setCurrentStep("Waiting... Click Run Algorithm.");
-  //   setRunning(false);
-  //   setStartTimes("");
-  //   setFinishTimes("");
-  // };
+      const dist = {};
+      nodesArr.forEach((n) => (dist[n] = Infinity));
+      dist[src] = 0;
+      const visited = new Set();
+
+      stepsArr.push({ dist: { ...dist }, visited: [...visited], current: null, message: `Source = ${src}` });
+
+      while (visited.size < nodesArr.length) {
+        let u = null,
+          best = Infinity;
+        nodesArr.forEach((n) => {
+          if (!visited.has(n) && dist[n] < best) {
+            best = dist[n];
+            u = n;
+          }
+        });
+        if (u === null) break;
+        visited.add(u);
+        edgeLines
+          .filter(([a]) => a === u)
+          .forEach(([, v, w]) => {
+            if (dist[u] + w < dist[v]) dist[v] = dist[u] + w;
+          });
+        stepsArr.push({
+          dist: { ...dist },
+          visited: [...visited],
+          current: u,
+          message: `Visited ${u}, relaxed neighbors`,
+        });
+      }
+    }
+
+    setSteps(stepsArr);
+    setCurrentStepIndex(stepsArr.length ? 0 : -1);
+  };
 
   return (
     <>
       <div className="mb-10">
-        <h1 className="text-4xl font-bold text-white mb-3">
-          Greedy Algorithms
-        </h1>
+        <h1 className="text-4xl font-bold text-white mb-3">Greedy Algorithms</h1>
         <p className="text-slate-400 text-lg max-w-3xl leading-8">
           Greedy algorithms build a solution step by step by always choosing the
           best possible option at the current moment. They work efficiently for
@@ -114,23 +211,18 @@ export default function Visualizer() {
           <span className="px-4 py-2 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-sm">
             Interactive Visualization
           </span>
-
           <span className="px-4 py-2 rounded-full bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 text-sm">
             Theory
           </span>
-
           <span className="px-4 py-2 rounded-full bg-violet-500/20 border border-violet-500/40 text-violet-300 text-sm">
             Complexity Analysis
           </span>
-
           <span className="px-4 py-2 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-sm">
             Code Examples
           </span>
         </div>
 
-        <h2 className="text-emerald-400 mt-6 text-xl">
-          {selectedAlgorithm}
-        </h2>
+        <h2 className="text-emerald-400 mt-6 text-xl">{selectedAlgorithm}</h2>
       </div>
 
       {/* Algorithm Selection Tabs */}
@@ -154,11 +246,8 @@ export default function Visualizer() {
       {/* =========================== MAIN LAYOUT =========================== */}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-10">
-
         {/* ================= Left Panel ================= */}
-
         <div className="lg:col-span-1">
-
           {/* Activity Selection Input */}
           {selectedAlgorithm === "Activity Selection" && (
             <div className="bg-slate-900 rounded-xl border border-slate-700 p-6">
@@ -186,7 +275,7 @@ export default function Visualizer() {
                 onClick={handleRun}
                 className="w-full bg-emerald-500 hover:bg-emerald-600 py-3 rounded-lg text-white font-semibold"
               >
-                {running ? "Re-run Algorithm" : "Run Algorithm"}
+                {steps.length ? "Re-run Algorithm" : "Run Algorithm"}
               </button>
             </div>
           )}
@@ -202,25 +291,31 @@ export default function Visualizer() {
                 type="text"
                 placeholder="Weights (10,20,30)"
                 className="w-full p-3 mb-4 rounded-lg bg-slate-800 border border-slate-700 text-white"
+                value={weights}
+                onChange={(e) => setWeights(e.target.value)}
               />
 
               <input
                 type="text"
                 placeholder="Values (60,100,120)"
                 className="w-full p-3 mb-4 rounded-lg bg-slate-800 border border-slate-700 text-white"
+                value={values}
+                onChange={(e) => setValues(e.target.value)}
               />
 
               <input
                 type="number"
                 placeholder="Capacity"
                 className="w-full p-3 mb-4 rounded-lg bg-slate-800 border border-slate-700 text-white"
+                value={capacity}
+                onChange={(e) => setCapacity(e.target.value)}
               />
 
               <button
                 onClick={handleRun}
                 className="w-full bg-emerald-500 hover:bg-emerald-600 py-3 rounded-lg text-white font-semibold"
               >
-                Run Algorithm
+                {steps.length ? "Re-run Algorithm" : "Run Algorithm"}
               </button>
             </div>
           )}
@@ -236,19 +331,23 @@ export default function Visualizer() {
                 type="text"
                 placeholder="Characters (A,B,C,D,E,F)"
                 className="w-full p-3 mb-4 rounded-lg bg-slate-800 border border-slate-700 text-white"
+                value={chars}
+                onChange={(e) => setChars(e.target.value)}
               />
 
               <input
                 type="text"
                 placeholder="Frequencies (5,9,12,13,16,45)"
                 className="w-full p-3 mb-4 rounded-lg bg-slate-800 border border-slate-700 text-white"
+                value={freqs}
+                onChange={(e) => setFreqs(e.target.value)}
               />
 
               <button
                 onClick={handleRun}
                 className="w-full bg-emerald-500 hover:bg-emerald-600 py-3 rounded-lg text-white font-semibold"
               >
-                Run Algorithm
+                {steps.length ? "Re-run Algorithm" : "Run Algorithm"}
               </button>
             </div>
           )}
@@ -256,201 +355,109 @@ export default function Visualizer() {
           {/* Dijkstra Input */}
           {selectedAlgorithm === "Dijkstra's Algorithm" && (
             <div className="bg-slate-900 rounded-xl border border-slate-700 p-6">
-              <h2 className="text-2xl font-bold text-white mb-5">
-                Dijkstra Input
-              </h2>
+              <h2 className="text-2xl font-bold text-white mb-5">Dijkstra Input</h2>
 
               <textarea
                 rows={5}
                 placeholder={`0 1 4\n0 2 1\n2 1 2\n1 3 1`}
                 className="w-full p-3 mb-4 rounded-lg bg-slate-800 border border-slate-700 text-white"
+                value={edgesText}
+                onChange={(e) => setEdgesText(e.target.value)}
               />
 
               <input
                 type="number"
                 placeholder="Source Node"
                 className="w-full p-3 mb-4 rounded-lg bg-slate-800 border border-slate-700 text-white"
+                value={sourceNode}
+                onChange={(e) => setSourceNode(e.target.value)}
               />
 
               <button
                 onClick={handleRun}
                 className="w-full bg-emerald-500 hover:bg-emerald-600 py-3 rounded-lg text-white font-semibold"
               >
-                Run Algorithm
+                {steps.length ? "Re-run Algorithm" : "Run Algorithm"}
               </button>
             </div>
           )}
-          <div>
-            {/* ==========================================================
-                                  Visualization
-            ========================================================== */}
 
-            {/* <h2 className="text-2xl font-bold text-white mb-6">
-              Visualization
-            </h2> */}
-
-            {/* <div className="h-[420px] rounded-xl bg-slate-800 border border-slate-700 p-6 overflow-auto">
-              {selectedAlgorithm === "Activity Selection" && (
-                <div>
-                  <h3 className="text-xl font-semibold text-white mb-6">
-                    Activities
-                  </h3>
-                  <div className="space-y-4">
-                    {activities.map((activity, idx) => (
-                      <div
-                        key={activity.id}
-                        className={`flex items-center gap-4 rounded-lg transition-all duration-200 ${
-                          idx === currentIndex
-                            ? "ring-2 ring-cyan-400 ring-offset-2 ring-offset-slate-800"
-                            : ""
-                        }`}
-                      >
-                        <span className="w-10 text-slate-300">
-                          {activity.id}
-                        </span>
-                        <div
-                          className={`flex-1 h-10 rounded flex items-center px-4 text-white
-                            ${
-                              activity.status === "selected"
-                                ? "bg-green-500"
-                                : activity.status === "rejected"
-                                ? "bg-red-500"
-                                : "bg-slate-600"
-                            }
-                          `}
-                        >
-                          Start : {activity.start}
-                          &nbsp;&nbsp;
-                          Finish : {activity.finish}
-                        </div>
-
-                      </div>
-                    ))}
-
-                  </div>
-                </div>
-              )}
-
-            </div>
-
-          
- 
- */}
-
-             </div>
-         {/* ================= Buttons ================= */}
-          {/* <div className="flex gap-3 mt-6">
-
-            <button
-              onClick={handleRun}
-              className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 rounded-lg transition-all duration-200"
-            >
-              {running ? "▶ Re-run Algorithm" : "▶ Run Algorithm"}
-            </button>
-
-            <button
-              onClick={handleReset}
-              disabled={!running}
-              className="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              ↺ Reset
-            </button>
-
-          </div> */}
-
+          <button
+            onClick={handleReset}
+            disabled={!steps.length}
+            className="w-full mt-3 bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            ↺ Reset
+          </button>
         </div>
 
         {/* ================= Right Panel ================= */}
-
         <div className="lg:col-span-2">
-
           <div className="bg-slate-900 rounded-xl border border-slate-700 p-6">
             <div className="flex items-center justify-between px-5 py-3 border-b border-slate-700">
+              <h2 className="text-white font-bold">Implementation</h2>
+              <div className="flex gap-2">
+                {languages.map((lang) => (
+                  <button
+                    key={lang}
+                    onClick={() => setSelectedLanguage(lang)}
+                    className={`px-3 py-1 rounded text-sm ${
+                      selectedLanguage === lang
+                        ? "bg-cyan-500 text-white"
+                        : "bg-slate-700 text-slate-300"
+                    }`}
+                  >
+                    {lang}
+                  </button>
+                ))}
+                <button className="px-3 py-1 rounded bg-slate-700">Copy</button>
+              </div>
+            </div>
 
-    <h2 className="text-white font-bold">
-        Implementation
-    </h2>
-<div className="flex gap-2">
+            <CodeViewer
+              language={selectedLanguage}
+              code={currentCode}
+              title={`${selectedAlgorithm} Implementation`}
+            />
 
-  {languages.map((lang) => (
-    <button
-      key={lang}
-      onClick={() => setSelectedLanguage(lang)}
-      className={`px-3 py-1 rounded text-sm ${
-        selectedLanguage === lang
-          ? "bg-cyan-500 text-white"
-          : "bg-slate-700 text-slate-300"
-      }`}
-    >
-      {lang}
-    </button>
-  ))}
+            <GreedyVisualizer
+              selectedAlgorithm={selectedAlgorithm}
+              steps={steps}
+              currentStepIndex={currentStepIndex}
+              setCurrentStepIndex={setCurrentStepIndex}
+              isPlaying={isPlaying}
+              setIsPlaying={setIsPlaying}
+            />
+          </div>
 
-  <button className="px-3 py-1 rounded bg-slate-700">
-    Copy
-  </button>
+          <div className="bg-slate-800 rounded-xl border border-slate-700 p-5 mt-6">
+            <h3 className="text-lg font-semibold text-amber-400 mb-4">Code Examples</h3>
 
-</div>
-
-</div>
-<CodeViewer
-  language={selectedLanguage}
-  code={currentCode}
-  title={`${selectedAlgorithm} Implementation`}
-/>
-<GreedyVisualizer
-    selectedAlgorithm={selectedAlgorithm}
-/>
-</div>
- <div className="bg-slate-800 rounded-xl border border-slate-700 p-5 mt-6">
-  <h3 className="text-lg font-semibold text-amber-400 mb-4">
-    Code Examples
-  </h3>
-    
-            {/* ==========================================================
-                                  Complexity
-            ========================================================== */}
-
+            {/* ========================== Complexity ========================== */}
             <div className="mt-6 grid md:grid-cols-2 gap-5">
-
               <div className="bg-slate-800 rounded-xl border border-slate-700 p-5">
-
-                <h3 className="text-lg font-semibold text-emerald-400">
-                  Time Complexity
-                </h3>
-
+                <h3 className="text-lg font-semibold text-emerald-400">Time Complexity</h3>
                 <p className="text-white mt-3">
                   {selectedAlgorithm === "Activity Selection" && "O(n log n)"}
                   {selectedAlgorithm === "Fractional Knapsack" && "O(n log n)"}
                   {selectedAlgorithm === "Huffman Coding" && "O(n log n)"}
                   {selectedAlgorithm === "Dijkstra's Algorithm" && "O((V + E) log V)"}
                 </p>
-
               </div>
 
               <div className="bg-slate-800 rounded-xl border border-slate-700 p-5">
-
-                <h3 className="text-lg font-semibold text-cyan-400">
-                  Space Complexity
-                </h3>
-
+                <h3 className="text-lg font-semibold text-cyan-400">Space Complexity</h3>
                 <p className="text-white mt-3">
                   {selectedAlgorithm === "Activity Selection" && "O(1)"}
                   {selectedAlgorithm === "Fractional Knapsack" && "O(1)"}
                   {selectedAlgorithm === "Huffman Coding" && "O(n)"}
                   {selectedAlgorithm === "Dijkstra's Algorithm" && "O(V)"}
                 </p>
-
               </div>
-
             </div>
-
           </div>
-
         </div>
-
       </div>
-
     </>
   );
 }

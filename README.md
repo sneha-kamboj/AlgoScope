@@ -1,5 +1,5 @@
 
-
+<div align="center">
 <img src="public/logo.png" alt="AlgoScope Logo" width="300px">
 
 # AlgoScope

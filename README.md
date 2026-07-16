@@ -2,7 +2,7 @@
 <div align="center">
 <img src="public/logo.png" alt="AlgoScope Logo" width="300px">
 
-# AlgoScope
+
 
 **A modern, interactive algorithm visualizer that demystifies complex logic through real-time, high-fidelity animations.**
 
